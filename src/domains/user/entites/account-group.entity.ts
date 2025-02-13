@@ -13,8 +13,8 @@ export class AccountGroup {
     @Column()
     count: number;
 
-    @Column({ type: 'enum', enum: Type })
-    type: Type;
+    @Column({ default: false })
+    isDeleted: boolean;
 
     @OneToMany(() => Account, (account) => account.accountGroup, {
         createForeignKeyConstraints: false,
@@ -28,5 +28,95 @@ export class AccountGroup {
 
     static of(accounts: Account[], count?: number) {
         return new AccountGroup(accounts, count);
+    }
+
+    maxCoinAccount() {
+        return this.accounts.reduce((prev, current) => {
+            return prev.coin_amount > current.coin_amount ? prev : current;
+        });
+    }
+
+    maxTokenAccount() {
+        return this.accounts.reduce((prev, current) => {
+            return prev.token_amount > current.token_amount ? prev : current;
+        });
+    }
+
+    minCoinAccount() {
+        return this.accounts.reduce((prev, current) => {
+            return prev.coin_amount < current.coin_amount ? prev : current;
+        });
+    }
+
+    minTokenAccount() {
+        return this.accounts.reduce((prev, current) => {
+            return prev.coin_amount < current.coin_amount ? prev : current;
+        });
+    }
+
+    maxCoinUserId() {
+        return this.maxCoinAccount().user_id;
+    }
+
+    maxTokenUserId() {
+        return this.maxTokenAccount().user_id;
+    }
+
+    minCoinUserId() {
+        return this.minCoinAccount().user_id;
+    }
+
+    minTokenUserId() {
+        return this.minTokenAccount().user_id;
+    }
+
+    startCoinAccountId() {
+        const maxUserId = this.maxCoinUserId();
+        let minUserId = this.minCoinUserId();
+
+        if (maxUserId === minUserId) {
+            minUserId += 1;
+        }
+
+        return Math.floor(Math.random() * (maxUserId - minUserId + 1)) + minUserId;
+    }
+
+    startTokenAccountId() {
+        const maxUserId = this.maxTokenUserId();
+        let minUserId = this.minTokenUserId();
+
+        if (maxUserId === minUserId) {
+            minUserId += 1;
+        }
+
+        return Math.floor(Math.random() * (maxUserId - minUserId + 1)) + minUserId;
+    }
+
+    maxCoinAccountZero() {
+        const max = Math.max(...this.accounts.map((account) => account.coin_amount));
+
+        return max === 0;
+    }
+
+    maxTokenAccountZero() {
+        const max = Math.max(...this.accounts.map((account) => account.token_amount));
+
+        return max === 0;
+    }
+
+    coinFromAddress() {
+        return this.maxCoinAccount().address;
+    }
+
+    coinPrivateKey() {
+        return this.maxCoinAccount().private_key;
+    }
+
+    coinToAddress() {
+        return this.minCoinAccount().address;
+    }
+
+    tokenToAddress() {
+        return this.minTokenAccount().address;
     }
 }

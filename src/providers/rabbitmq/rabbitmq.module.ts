@@ -6,6 +6,7 @@ import { RabbitmqProduceService } from './rabbitmq-produce.service';
 import { RabbitmqConsumeService } from './rabbitmq-consume.service';
 import { RabbitMQDocumentationService } from './rabbitmq-documentation.service';
 import { RabbitmqBinderService } from './rabbitmq-binder.service';
+import { RabbitTransactionService } from './rabbitmq-tranaction.service';
 
 @Module({
     imports: [LoggerModule],
@@ -16,12 +17,14 @@ import { RabbitmqBinderService } from './rabbitmq-binder.service';
         RabbitmqProduceService,
         RabbitmqConsumeService,
         RabbitMQDocumentationService,
+        RabbitTransactionService,
     ],
     exports: [
         RabbitmqService,
         RabbitmqProduceService,
         RabbitmqConsumeService,
         RabbitmqBinderService,
+        RabbitTransactionService,
     ],
 })
 export class RabbitmqModule {}

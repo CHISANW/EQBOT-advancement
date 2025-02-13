@@ -1,27 +1,23 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { UserService } from '../../../domains/user/user.service';
 import { Web3Service } from './web3Service';
 
 @Injectable()
 export class Web3ServiceV2Impl implements Web3Service {
-    constructor(
-        @Inject('WEB3') private readonly web3: any,
-        private readonly userService: UserService,
-    ) {}
+    constructor(@Inject('WEB3') private readonly web3: any) {}
 
-    public async createAccounts() {
-        let accounts = Array.from({ length: 10 }, () => this.web3.eth.accounts.create());
-        return await this.userService.save(accounts);
+    public async createAccounts(accountCount?: number) {
+        return Array.from({ length: accountCount ?? 10 }, () => this.web3.eth.accounts.create());
     }
 
     public async deleteAccount() {
-        await this.userService.deleteTenAccounts();
+        // await this.userService.deleteTenAccounts();
     }
 
     public async transaction(fromAddress, privateKey, toAddresss, amount): Promise<any> {
         const tx = await this.createTransaction(fromAddress, toAddresss);
         const signedTx = await this.signTransaction(tx, privateKey);
-        return (await this.sendTransaction(signedTx)).transactionHash;
+        const newVar = await this.sendTransaction(signedTx);
+        return newVar.transactionHash;
     }
 
     private async createTransaction(senderAddress: string, receiverAddress: string) {
@@ -44,6 +40,6 @@ export class Web3ServiceV2Impl implements Web3Service {
         if (!signedTx.rawTransaction) {
             throw new Error('No rawTransaction found in signedTx.');
         }
-        return this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        return await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
     }
 }

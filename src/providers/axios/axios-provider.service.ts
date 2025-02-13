@@ -12,22 +12,25 @@ export class AxiosProvider {
     }
 
     getTransferUrl() {
-        return `${Config.getEnvironment().EQ_API}/v1/token-kits/kits/13/transfers/transfer?accountId=${Config.getEnvironment().ACCOUNT_ID}`;
+        return `${Config.getEnvironment().EQ_API}/v1/token-kits/kits/20/transfers/transfer?accountId=${Config.getEnvironment().ACCOUNT_ID}`;
     }
 
     getFillAmountUrl() {
-        return `${Config.getEnvironment().EQ_API}/v1/token-kits/kits/13/issuances/issue?accountId=${Config.getEnvironment().ACCOUNT_ID}`;
+        return `${Config.getEnvironment().EQ_API}/v1/token-kits/kits/20/issuances/issue?accountId=${Config.getEnvironment().ACCOUNT_ID}`;
     }
 
     getTransactionReceiptUrl(hash: string) {
         return `/v2/request/transaction/${hash}/receipt?microChainId=43161`;
     }
 
-    createTransferBody(user: Account, amount: string) {
+    createTransferBody(address: string, amount: string) {
         return {
+            secretKey:
+                'rXjOkjliAaORC7pZ5W-4sXJnJjYpI29zf_5QtjgvJxCpZcbT_-OWO1Mh_n67Er57fajUuz-W6sGT9m6CYSYluw',
+            password: '000000',
             transferObjects: [
                 {
-                    recipientAddress: 'user.meta_address',
+                    recipientAddress: address,
                     amount: amount,
                 },
             ],

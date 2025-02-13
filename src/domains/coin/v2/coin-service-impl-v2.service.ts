@@ -1,68 +1,49 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CoinService } from '../coin.service';
-import { Web3ServiceV1 } from '../../../providers/web3/v1/web3-service-v1.service';
 import { UserService } from '../../user/user.service';
-import { RabbitmqService } from '../../../providers/rabbitmq/rabbitmq.service';
-import { ViewService } from '../../../providers/view/view.service';
-import { APP } from '../../../config/constants/constants';
-import { Account } from '../../user/entites/account.entity';
-
+import { Web3Service } from '../../../providers/web3/v2/web3Service';
+import { TransactionStopInstance } from '../../blockchain-transactions/utils/transactionStopInstance';
+import { RabbitTransactionService } from '../../../providers/rabbitmq/rabbitmq-tranaction.service';
 @Injectable()
 export class CoinServiceImplV2 implements CoinService {
     constructor(
-        private readonly web3Service: Web3ServiceV1,
+        @Inject('Web3Service') private readonly web3Service: Web3Service,
         private readonly userService: UserService,
-        private readonly rabbitMQService: RabbitmqService,
-        @Inject('ViewService') private readonly viewService: ViewService,
+        private readonly rabbitService: RabbitTransactionService,
     ) {}
 
-    async sendCoin(user: any, uuid: any, retry?: number): Promise<number> {
-        let users = await this.userService.totalCount();
-        let maxUser = await this.userService.findMaxAmountUser();
-        let minUser = await this.userService.findMinAmountUser();
-
-        const random = Math.floor(Math.random() * maxUser.amount) + 1;
-
-        console.log('최댓 값', maxUser.user_id);
-        console.log('최솟 값', minUser.user_id);
-        console.log('랜덤 값', random);
-
-        // for (let i = 1; i <= users; i++) {
-        //     this.sendCoinTransaction(maxUser, minUser);
-        // }
-
-        return 1;
-        // try {
-        //     await this.sendCoinTransaction(user.from, user.to, uuid);
-        // } catch (err) {
-        //     if (retry > APP.ZERO) {
-        //         return await this.retrySendCoin(user, retry, uuid);
-        //     }
-        // }
-        //
-        // let nextFromId = user.to.user_id;
-        // let nextToId = nextFromId === 10 ? 1 : nextFromId + 1;
-        //
-        // return await this.sendCoin(
-        //     await this.userService.findUsers(nextFromId, nextToId),
-        //     uuid,
-        //     retry - 1,
-        // );
+    sendCoin(user: any, uuid: any, retryCount?: number): Promise<number> {
+        throw new Error('Method not implemented.');
     }
 
-    private async sendCoinTransaction(from: Account, to: Account, amount: number) {
-        return await this.web3Service
-            .transaction(from?.address, from?.private_key, to?.address)
-            .then(async (transaction) => {
-                // await this.rabbitMQService.publishCoin(transaction);
-                // await this.rabbitMQService.publishFile(uuid, transaction);
-                this.viewService.printCoinTransactionLog(transaction);
-                return transaction;
-            });
-    }
+    /**
+     * 코인 전송 실행 (MQ 메시지를 통해 실행)
+     * @param groupId 그룹 ID
+     * @param isStop 중지 여부 (MQ에서 전달됨)
+     */
+    async sendCoin1(groupId: number, isStop?: boolean): Promise<void> {
+        // 중지 요청 받았을때 종료 조건 -> 메소드를 중지하는 MQ요청을 보낸다
+        if (isStop) {
+            await this.rabbitService.sendCoinStopMessage(groupId);
+            return;
+        }
 
-    private async retrySendCoin(user: any, retry: number, uuid: any) {
-        await new Promise((resolve) => setTimeout(resolve, APP.WAIT_TIME));
-        return await this.sendCoin(user, uuid, retry);
+        if (TransactionStopInstance.isTransactionStopped(groupId)) return;
+
+        for (let i = 0; i < 3; i++) {
+            if (TransactionStopInstance.isTransactionStopped(groupId)) return;
+        }
+        const accountGroup = await this.userService.processCoinAccountGroup(groupId);
+
+        const hash = await this.web3Service.transaction(
+            accountGroup.coinFromAddress(),
+            accountGroup.coinPrivateKey(),
+            accountGroup.tokenToAddress(),
+            1,
+        );
+
+        console.log(`✅ 코인 전송 완료: groupId=${groupId}, hash=${hash}`);
+
+        this.rabbitService.sendCoinMessage(groupId);
     }
 }

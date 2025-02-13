@@ -31,7 +31,6 @@ export class RabbitmqService implements OnModuleInit {
 
         // consumer
         await this.rabbitmqConsumerService.assertQueue();
-        await this.rabbitmqConsumerService.consumeMessages();
         await this.rabbitmqBinderService.bindQueue();
 
         // documentation

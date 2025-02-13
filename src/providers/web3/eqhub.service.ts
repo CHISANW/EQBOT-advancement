@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { AxiosProvider } from '../axios/axios-provider.service';
 import { ViewService } from '../view/view.service';
 import { APP } from '../../config/constants/constants';
@@ -31,6 +31,39 @@ export class EqHubService {
             return axiosResponse;
         } catch (error) {
             return await this.retryTransactionReceipt(retryCount, txHash);
+        }
+    }
+
+    public async sendFillAmountRequest() {
+        const response = await axios.post(
+            this.axiosProvider.getFillAmountUrl(),
+            this.axiosProvider.createFillBody(),
+            {
+                headers: AxiosProvider.getHeaders(),
+            },
+        );
+        return response.data.transaction_hash;
+    }
+
+    public async sendEQBRToken(toAddress: string, retryCount: number = 3): Promise<any> {
+        try {
+            const axiosResponse = await axios.post(
+                this.axiosProvider.getTransferUrl(),
+                this.axiosProvider.createTransferBody(toAddress, '100'),
+                {
+                    headers: AxiosProvider.getHeaders(),
+                },
+            );
+            if (axiosResponse.data.transaction_hash === undefined) {
+                throw new Error('값이 없음');
+            }
+            return axiosResponse.data.transaction_hash;
+        } catch (error) {
+            if (retryCount > 0) {
+                await new Promise((resolve) => setTimeout(resolve, 5000));
+                return this.sendEQBRToken(toAddress, retryCount - 1);
+            }
+            throw error;
         }
     }
 

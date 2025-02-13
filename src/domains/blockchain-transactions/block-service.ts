@@ -1,5 +1,10 @@
-export interface BlockService {
-    generateRandomTransactions(iteration: number, amount: string, email: string): Promise<void>;
+import { BlockDto } from './v2/dtos/block-dto';
+import { BotStopDto } from '../../providers/rabbitmq/dtos/rabbitmq.dto';
 
-    testMQ(group?: number, count?: number);
+export interface BlockService {
+    generateTransactions(blockDto: BlockDto): Promise<void>;
+
+    stopSendMQ();
+
+    transactionSoftDelete(botStopDto: BotStopDto);
 }

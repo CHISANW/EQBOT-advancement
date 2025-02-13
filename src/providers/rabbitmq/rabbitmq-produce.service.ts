@@ -38,16 +38,12 @@ export class RabbitmqProduceService {
             const exchange = produceBind.exchange.name;
             const { routingKey } = produceBind;
 
-            // let b = RabbitmqService.channel.publish(exchange, routingKey, messageBuffer);
-
             const success = RabbitmqService.channel.publish(
                 exchange,
                 routingKey,
                 messageBuffer,
                 { mandatory: true }, // 메시지가 큐에 도달하지 않으면 반환됨
             );
-            //
-            // console.log('Publish success:', success);
         } catch (error) {
             this.logger.error(error);
         }

@@ -1,4 +1,8 @@
 import { MqProperty } from 'src/core/decorators/rabbitmq-property.decorator';
+import {
+    AssetType,
+    IsStopInstance,
+} from '../../../domains/blockchain-transactions/utils/transactionStopInstance';
 
 export class SampleCreateRmqDto {
     @MqProperty({
@@ -37,5 +41,57 @@ export class BotEmail {
 
     static of(uuid: string, email: string) {
         return new BotEmail(uuid, email);
+    }
+}
+
+export class BotTransactionDto {
+    group_id: number;
+
+    transaction_type: string;
+
+    isStop: boolean;
+
+    constructor(group_id?: number, transaction_type?: string, isStop?: boolean) {
+        this.group_id = group_id;
+        this.transaction_type = transaction_type;
+        this.isStop = isStop ?? false;
+    }
+
+    static coin(groupId: number, isStop?: boolean) {
+        return new BotTransactionDto(groupId, 'COIN', isStop);
+    }
+
+    static token(groupId: number, isStop?: boolean) {
+        return new BotTransactionDto(groupId, 'TOKEN', isStop);
+    }
+}
+
+export class BotStopDto {
+    group_id: number;
+    isStopInstance: IsStopInstance;
+
+    constructor(group_id: number, isStopInstance: IsStopInstance) {
+        this.group_id = group_id;
+        this.isStopInstance = isStopInstance;
+    }
+
+    static of(groupId: number, isStopInstance: IsStopInstance) {
+        return new BotStopDto(groupId, isStopInstance);
+    }
+
+    static fromRawData(data: any): BotStopDto | null {
+        if (!data?.group_id || !data?.isStopInstance) {
+            console.error('Invalid data received:', data);
+            return null;
+        }
+
+        const { group_id, isStopInstance } = data;
+
+        const instance = new IsStopInstance(
+            isStopInstance.isStop,
+            isStopInstance.isToken ? AssetType.TOKEN : AssetType.COIN,
+        );
+
+        return new BotStopDto(group_id, instance);
     }
 }

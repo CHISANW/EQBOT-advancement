@@ -1,19 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import Web3 from 'web3';
-import { Account } from 'web3-core';
-import { Contract } from 'web3-eth-contract';
 import { UserService } from '../../../domains/user/user.service';
 
 @Injectable()
 export class Web3ServiceV1 implements Web3ServiceV1 {
-    constructor(
-        @Inject('WEB3') private readonly web3: any,
-        private readonly userService: UserService,
-    ) {}
+    constructor(@Inject('WEB3') private readonly web3: any) {}
 
     public async createAccounts() {
-        let accounts = Array.from({ length: 10 }, () => this.web3.eth.getAccounts().create());
-        return await this.userService.save(accounts);
+        return Array.from({ length: 10 }, () => this.web3.eth.getAccounts().create());
     }
 
     public deleteAccount(): Promise<void> {

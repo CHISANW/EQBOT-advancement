@@ -19,4 +19,27 @@ export class AccountGroupRepository {
     async deleteAccount(groupId: number) {
         await this.accountGroupRepository.delete(groupId);
     }
+
+    async findAccountGroup(groupId: number): Promise<AccountGroup> {
+        return this.accountGroupRepository.findOne({
+            where: { id: groupId },
+            relations: ['accounts'], // accounts 필드까지 조회
+        });
+    }
+
+    async findAccountGroupLastId(): Promise<number> {
+        const accountGroups = await this.accountGroupRepository.find({
+            order: { id: 'DESC' },
+            take: 1, // 최신 1개만 가져옴
+        });
+
+        return accountGroups.length > 0 ? accountGroups[0].id : null;
+    }
+
+    async findInitGroupIds(): Promise<number[]> {
+        const accountGroups = await this.accountGroupRepository.find({
+            select: ['id'],
+        });
+        return accountGroups.map((group) => group.id);
+    }
 }

@@ -1,20 +1,20 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { AccountRepository } from '../user/repositories/account.repository';
+import { AccountRepository } from '../../user/repositories/account.repository';
 import axios from 'axios';
-import { AxiosProvider } from '../../providers/axios/axios-provider.service';
-import { ViewService } from '../../providers/view/view.service';
-import { APP } from '../../config/constants/constants';
-import { Account } from '../user/entites/account.entity';
-import { RabbitmqService } from '../../providers/rabbitmq/rabbitmq.service';
+import { AxiosProvider } from '../../../providers/axios/axios-provider.service';
+import { ViewService } from '../../../providers/view/view.service';
+import { APP } from '../../../config/constants/constants';
+import { Account } from '../../user/entites/account.entity';
+import { RabbitmqService } from '../../../providers/rabbitmq/rabbitmq.service';
 
-export interface TokenService {
+export interface TokenServiceV1 {
     fillAmount(): Promise<any>;
 
     sendToken(userId: number, amount: string, uuid: any, retryCount?: number): Promise<any>;
 }
 
 @Injectable()
-export class TokenServiceImpl implements TokenService {
+export class TokenServiceImpl implements TokenServiceV1 {
     constructor(
         private readonly userRepository: AccountRepository,
         private readonly axiosProvider: AxiosProvider,
@@ -85,7 +85,7 @@ export class TokenServiceImpl implements TokenService {
     private async transferCoin(user: Account, amount: string, nextUserId: number, uuid: any) {
         let axiosResponse = await axios.post(
             this.axiosProvider.getTransferUrl(),
-            this.axiosProvider.createTransferBody(user, amount),
+            this.axiosProvider.createTransferBody('user', amount),
             {
                 headers: AxiosProvider.getHeaders(),
             },

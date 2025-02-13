@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import Web3 from 'web3';
 import axios from 'axios';
 import { EqHubService } from './eqhub.service';
@@ -9,7 +9,7 @@ import { ViewModule } from '../view/view.module';
 import { Web3ServiceV2Impl } from './v2/web3-service-v2.service';
 
 @Module({
-    imports: [UserModule, AxiosModule, ViewModule],
+    imports: [AxiosModule, ViewModule],
     providers: [
         Web3ServiceV1,
         EqHubService,
