@@ -89,6 +89,10 @@ export class UserService {
     async getLastGroupId() {
         return await this.accountGroupRepository.findAccountGroupLastId();
     }
+
+    async updateIsDeleted() {
+        return await this.accountGroupRepository.updateIsDeleted();
+    }
     async softDeleteAccount(groupId: number) {
         await this.accountGroupRepository.deleteAccount(groupId);
         await this.accountRepository.softDeleteAccount(groupId);
@@ -128,5 +132,9 @@ export class UserService {
 
     async initGroupIds() {
         return await this.accountGroupRepository.findInitGroupIds();
+    }
+
+    async initDeleteIds() {
+        return await this.accountGroupRepository.findDeleteIds();
     }
 }

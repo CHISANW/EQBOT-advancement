@@ -15,6 +15,8 @@ export class testService implements OnModuleInit {
 
     private async runStartupLogic() {
         const initGroupIds = await this.userService.initGroupIds();
+        const deleteIds = await this.userService.initDeleteIds();
         for (const groupId of initGroupIds) await this.rabbitService.sendAllExecuteMessage(groupId);
+        for (const groupId of deleteIds) await this.rabbitService.sendAllStopMessage(groupId);
     }
 }

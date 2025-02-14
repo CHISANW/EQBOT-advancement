@@ -28,7 +28,11 @@ export class Web3ServiceV2Impl implements Web3Service {
         ];
 
         const contract = await new this.web3.eth.Contract(contractABI, contractAddress);
-        const tokenAmount = this.web3.utils.toBN(account.token_amount);
+        const tokenDecimals = 18; // 실제 토큰의 Decimals 값으로 변경
+
+        const tokenAmount = this.web3.utils
+            .toBN(account.token_amount)
+            .mul(this.web3.utils.toBN(10).pow(this.web3.utils.toBN(tokenDecimals)));
 
         return await this.sendToken(
             contract,
@@ -66,6 +70,7 @@ export class Web3ServiceV2Impl implements Web3Service {
             const signedTx = await this.web3.eth.accounts.signTransaction(tx, privateKey);
 
             const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+            console.log('사인', signedTx);
             return receipt.transactionHash;
         } catch (error) {
             if (error && retry > 0) {

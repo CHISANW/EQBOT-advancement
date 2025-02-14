@@ -12,6 +12,17 @@ export class AccountGroupRepository {
         private readonly accountRepository: AccountRepository,
     ) {}
 
+    async updateIsDeleted() {
+        return this.accountGroupRepository.query(
+            `
+           UPDATE account_group AS ag
+            JOIN (
+                SELECT id FROM account_group ORDER BY id DESC LIMIT 1
+            ) AS sub ON ag.id = sub.id
+            SET ag.isDeleted = true;
+            `,
+        );
+    }
     async save(accountGroup: AccountGroup): Promise<AccountGroup> {
         return this.accountGroupRepository.save(accountGroup);
     }
@@ -30,6 +41,7 @@ export class AccountGroupRepository {
     async findAccountGroupLastId(): Promise<number> {
         const accountGroups = await this.accountGroupRepository.find({
             order: { id: 'DESC' },
+            where: { isDeleted: false },
             take: 1, // 최신 1개만 가져옴
         });
 
@@ -39,7 +51,16 @@ export class AccountGroupRepository {
     async findInitGroupIds(): Promise<number[]> {
         const accountGroups = await this.accountGroupRepository.find({
             select: ['id'],
+            where: { isDeleted: false },
         });
         return accountGroups.map((group) => group.id);
+    }
+
+    async findDeleteIds() {
+        const accountDeleteGroups = await this.accountGroupRepository.find({
+            select: ['id'],
+            where: { isDeleted: true },
+        });
+        return accountDeleteGroups.map((group) => group.id);
     }
 }

@@ -25,6 +25,7 @@ export class BlockServiceImplV2 implements BlockService {
     async stopSendMQ() {
         try {
             const groupId = await this.userService.getLastGroupId();
+            await this.userService.updateIsDeleted();
             const accountGroup = await this.userService.findAccountGroup(groupId);
 
             const accounts: Account[] = accountGroup.accounts;

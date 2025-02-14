@@ -5,6 +5,7 @@ import { BlockDto } from './dtos/block-dto';
 import { TransactionHandlerFactory } from '../handler/transaction-handler-factory';
 import { BotStopDto, BotTransactionDto } from '../../../providers/rabbitmq/dtos/rabbitmq.dto';
 import { Web3Service } from '../../../providers/web3/v2/web3Service';
+import { Account } from '../../user/entites/account.entity';
 
 @Controller('block')
 export class BlockControllerV2 {
@@ -27,6 +28,20 @@ export class BlockControllerV2 {
     async testDelete() {
         this.blockService.stopSendMQ();
         return 'ok';
+    }
+
+    @Post('aaaaa')
+    async test() {
+        const account = Account.of(
+            '0x3ed67247D8914Cd2D445f125B6671a32a73ceDbe',
+            '0x9aa6b353af4289bf938188e14dde5bbc6619d684ad98ad8642af3945c51a17c1',
+        );
+
+        account.token_amount = 1000;
+        await this.webService.transferTokenToAdminOrAccount(
+            account,
+            '0x8E46c086D965A2894C4fAF87e3F542A7c3298c8c',
+        );
     }
 
     @RabbitmqSubscribe('BOT-TRANSACTION', 1)

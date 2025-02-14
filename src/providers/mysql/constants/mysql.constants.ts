@@ -9,7 +9,7 @@ export const MYSQL = {
         entities: [Account, AccountGroup],
         synchronize: Config.getEnvironment().NODE_ENV !== 'production',
         timezone: 'Z',
-        logging: true,
+        // logging: true,
     },
 };
 

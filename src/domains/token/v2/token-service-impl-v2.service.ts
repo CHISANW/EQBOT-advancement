@@ -81,14 +81,10 @@ export class TokenServiceImplV2 implements TokenService {
 
         for (let i = 0; i < 3; i++) {
             if (TransactionStopInstance.isTransactionStopped(groupId)) {
-                // await this.userService.returnToken(groupId);
-                // console.log('토큰 리턴하기');
                 return;
             }
             await new Promise((resolve) => setTimeout(resolve, APP.WAIT_TIME));
         }
-
-        // let txHash = await this.eqbrService.sendEQBRToken(accountGroup.tokenToAddress(), imp);
 
         console.log(`✅ 토큰 전송 완료: groupId=${groupId}, hash=${txHash}`);
         await this.rabbitService.sendTokenMessage(groupId);
