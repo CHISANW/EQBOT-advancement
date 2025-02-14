@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AccountRepository } from '../../user/repositories/account.repository';
 import { AxiosProvider } from '../../../providers/axios/axios-provider.service';
 import { APP } from '../../../config/constants/constants';
@@ -13,13 +13,13 @@ import {
 import { RabbitTransactionService } from '../../../providers/rabbitmq/rabbitmq-tranaction.service';
 import { EqHubService } from '../../../providers/web3/eqhub.service';
 import { AccountGroup } from '../../user/entites/account-group.entity';
+import { Web3Service } from '../../../providers/web3/v2/web3Service';
 
 @Injectable()
 export class TokenServiceImplV2 implements TokenService {
     constructor(
         private readonly eqbrService: EqHubService,
-        private readonly userRepository: AccountRepository,
-        private readonly axiosProvider: AxiosProvider,
+        @Inject('Web3Service') private readonly web3Service: Web3Service,
         private readonly userService: UserService,
         private readonly rabbitService: RabbitTransactionService,
     ) {}
@@ -43,9 +43,13 @@ export class TokenServiceImplV2 implements TokenService {
     }
 
     public async sendToken(groupId: number, isStop?: boolean): Promise<void> {
-        if (isStop) return;
-        if (TransactionStopInstance.isTransactionStopped(groupId)) {
+        if (isStop) {
             await this.rabbitService.sendTokenStopMessage(groupId);
+            return;
+        }
+        if (TransactionStopInstance.isTransactionStopped(groupId)) {
+            await this.userService.returnCoinAndToken(groupId);
+            console.log('정지');
             return;
         }
 
@@ -53,23 +57,40 @@ export class TokenServiceImplV2 implements TokenService {
         const maxUserId = accountGroup.maxTokenUserId();
 
         if (accountGroup.maxTokenAccountZero()) {
-            await this.fillAmount();
+            // await this.fillAmount();
             await this.userService.initTokenCharge(maxUserId);
+            await this.eqbrService.initToken(accountGroup.maxTokenAccount());
         }
-        await this.userService.transferToken(maxUserId, accountGroup.startTokenAccountId(), 100);
+        const number = Math.floor(Math.random() * 100) + 1;
+        let imp = number;
+        const tokenAmount = accountGroup.minCoinAccount().token_amount;
+
+        if (accountGroup.maxCoinAccount().token_amount === 10000 && -imp < 0) {
+            imp = tokenAmount;
+        }
+        const toId = accountGroup.startTokenAccountId();
+
+        await this.userService.transferToken(maxUserId, toId, imp);
+        // console.log('보내는 사람의 계쩡', accountGroup.maxTokenAccount());
+
+        const toAddress = await this.userService.findById(toId);
+        let txHash = await this.web3Service.transferTokenToAdminOrAccount(
+            accountGroup.maxTokenAccount(),
+            toAddress.address,
+        );
 
         for (let i = 0; i < 3; i++) {
-            if (TransactionStopInstance.isTransactionStopped(groupId)) return;
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            if (TransactionStopInstance.isTransactionStopped(groupId)) {
+                // await this.userService.returnToken(groupId);
+                // console.log('토큰 리턴하기');
+                return;
+            }
+            await new Promise((resolve) => setTimeout(resolve, APP.WAIT_TIME));
         }
-        await this.successTx(groupId, accountGroup);
-    }
 
-    private async successTx(groupId: number, accountGroup: AccountGroup) {
-        if (TransactionStopInstance.isTransactionSuccess(groupId)) {
-            let txHash = await this.eqbrService.sendEQBRToken(accountGroup.tokenToAddress());
-            console.log(`✅ 토큰 전송 완료: groupId=${groupId}, hash=${txHash}`);
-            await this.rabbitService.sendTokenMessage(groupId);
-        }
+        // let txHash = await this.eqbrService.sendEQBRToken(accountGroup.tokenToAddress(), imp);
+
+        console.log(`✅ 토큰 전송 완료: groupId=${groupId}, hash=${txHash}`);
+        await this.rabbitService.sendTokenMessage(groupId);
     }
 }

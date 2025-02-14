@@ -75,10 +75,10 @@ export class AccountGroup {
         let minUserId = this.minCoinUserId();
 
         if (maxUserId === minUserId) {
-            minUserId += 1;
+            return minUserId - 1;
         }
 
-        return Math.floor(Math.random() * (maxUserId - minUserId + 1)) + minUserId;
+        return this.calculateRandomId(maxUserId, minUserId);
     }
 
     startTokenAccountId() {
@@ -86,10 +86,20 @@ export class AccountGroup {
         let minUserId = this.minTokenUserId();
 
         if (maxUserId === minUserId) {
-            minUserId += 1;
+            return minUserId - 1;
         }
 
-        return Math.floor(Math.random() * (maxUserId - minUserId + 1)) + minUserId;
+        return this.calculateRandomId(maxUserId, minUserId);
+    }
+
+    // tokenToAccountAddress() {
+    //     const groupId = this.startCoinAccountId();
+    //     const account = this.accounts.find((account) => account.accountGroup.id === groupId);
+    //     return account.address;
+    // }
+
+    private calculateRandomId(maxUserId: number, minUserId: number) {
+        return Math.floor(Math.random() * (maxUserId - minUserId)) + minUserId;
     }
 
     maxCoinAccountZero() {

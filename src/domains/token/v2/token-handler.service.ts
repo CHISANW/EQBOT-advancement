@@ -6,7 +6,6 @@ import { TokenService } from './token-service';
 export class TokenTransactionHandler implements TransactionHandler {
     constructor(@Inject('TokenService') private readonly tokenService: TokenService) {}
 
-    //todo 마지막에 주석제거하기
     async handleTransaction(data: any): Promise<void> {
         const { group_id, isStop } = data;
         await this.tokenService.sendToken(group_id, isStop);

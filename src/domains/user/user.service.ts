@@ -13,19 +13,20 @@ export class UserService {
         @Inject('Web3Service') private readonly webService: Web3Service,
     ) {}
 
+    async findById(accountId: number) {
+        return await this.accountRepository.findById(accountId);
+    }
     /*
     사용자를 생성후에 DB에 저장한다.
      */
     async createAccounts(accountCount: number): Promise<any> {
         const accounts = await this.webService.createAccounts(accountCount);
 
-        const newVar = await Promise.all(
+        return await Promise.all(
             accounts.map((account) =>
                 this.accountRepository.save(Account.of(account.address, account.privateKey)),
             ),
         );
-
-        return newVar;
     }
 
     /*
@@ -47,8 +48,17 @@ export class UserService {
             .then((result) => result.id);
     }
 
-    async totalCount(): Promise<number> {
-        return await this.accountRepository.totalCount();
+    // async returnToken(groupId: number) {
+    //     const tokenSum = await this.accountRepository.sumTokenAmount(groupId);
+    //     await this.accountRepository.returnToken(tokenSum);
+    //     await this.accountRepository.resetToken(groupId);
+    // }
+
+    async returnCoinAndToken(groupId: number) {
+        const coinSum = await this.accountRepository.sumCoinAmount(groupId);
+        const tokenSum = await this.accountRepository.sumTokenAmount(groupId);
+        await this.accountRepository.returnCoinAndToken(coinSum, tokenSum);
+        await this.accountRepository.resetCoinAndToken(groupId);
     }
 
     async findUsers(formUserId: number, toUserId: number) {
@@ -57,40 +67,26 @@ export class UserService {
         return { from, to };
     }
 
-    async processCoinAccountGroup(groupId: number) {
+    async processCoinAccountGroup(groupId: number, price: number) {
         const accountGroup = await this.findAccountGroup(groupId);
+        const coinAmount = accountGroup.minCoinAccount().coin_amount;
+        const maxCoin = accountGroup.maxCoinAccount().coin_amount;
+
+        let result = price;
+        if (maxCoin === Number('10.00') && coinAmount - result < 0) {
+            result = coinAmount;
+        }
+
         const maxUserId = accountGroup.maxCoinUserId();
         if (accountGroup.maxCoinAccountZero()) {
             await this.initCoinCharge(maxUserId);
         }
-        await this.transferCoin(maxUserId, accountGroup.startCoinAccountId(), 1);
+
+        await this.transferCoin(maxUserId, accountGroup.startCoinAccountId(), result);
         return accountGroup;
     }
-
-    async processTokenAccountGroup(groupId: number) {
-        const accountGroup = await this.findAccountGroup(groupId);
-        const maxUserId = accountGroup.maxCoinUserId();
-        if (accountGroup.maxCoinAccountZero()) {
-            await this.initCoinCharge(maxUserId);
-        }
-        await this.transferCoin(maxUserId, accountGroup.startCoinAccountId(), 1);
-        return accountGroup;
-    }
-
-    async deleteTenAccounts(): Promise<void> {
-        await this.accountRepository.deleteTenAccounts();
-    }
-
-    async findMaxAmountUser() {
-        return await this.accountRepository.maxAmountUser();
-    }
-
-    async findMinAmountUser() {
-        return await this.accountRepository.minAmountUser();
-    }
-
     // 마지막 아이디 가져오기
-    async getlastId() {
+    async getLastGroupId() {
         return await this.accountGroupRepository.findAccountGroupLastId();
     }
     async softDeleteAccount(groupId: number) {
@@ -112,7 +108,7 @@ export class UserService {
 
     async initCoinCharge(toAccountId: number) {
         await this.accountRepository.chargeCoin(toAccountId, 10);
-        await this.updateAdminCoinTransaction(10, true); // 입금
+        await this.updateAdminCoinTransaction(10, true); // 출금
     }
 
     async transferCoin(fromAccountId: number, toAccountId: number, amount: number) {

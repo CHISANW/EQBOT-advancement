@@ -39,6 +39,9 @@ export class AxiosProvider {
 
     createFillBody() {
         return {
+            secretKey:
+                'rXjOkjliAaORC7pZ5W-4sXJnJjYpI29zf_5QtjgvJxCpZcbT_-OWO1Mh_n67Er57fajUuz-W6sGT9m6CYSYluw',
+            password: '000000',
             issuanceObjects: [
                 {
                     recipientAddress: Config.getEnvironment().META_ADDRESS,

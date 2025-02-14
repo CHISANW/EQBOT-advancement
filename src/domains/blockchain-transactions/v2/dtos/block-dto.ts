@@ -1,4 +1,4 @@
-import { IsOptional } from 'class-validator';
+import { IsOptional, Min } from 'class-validator';
 
 export class BlockDto {
     @IsOptional()
@@ -11,6 +11,7 @@ export class BlockDto {
     groupId: number;
 
     @IsOptional()
+    @Min(4)
     accountCount: number;
 
     private constructor(amount?: string, iteration?: number, groupId?: number, count?: number) {

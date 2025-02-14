@@ -18,6 +18,12 @@ export class Environment {
     EQ_API = process.env.EQ_ENDPOINT;
 
     @IsString()
+    EQ_CONTRACT_ADDRESS = process.env.EQ_CONTRACT_ADDRESS;
+
+    @IsString()
+    EQ_RECIPIENT_ADDRESS = process.env.EQ_RECIPIENT_ADDRESS;
+
+    @IsString()
     META_ADDRESS = process.env.META_ADDRESS;
 
     @IsString()
@@ -46,37 +52,8 @@ export class Environment {
         port: Number(process.env.DB_PORT),
     });
 
-    // @IsString()
-    // SOCKET_URL = process.env.SOCKET_URL;
-
-    // @IsString()
-    // DEVELOPER_USER_SERVER_ADDR = process.env.DEVELOPER_USER_SERVER_ADDR;
-
-    // @IsString()
-    // AUTH_SERVER_ADDR = process.env.AUTH_SERVER_ADDR;
-
-    // @IsString()
-    DATA_RELAYING_APP_SERVER_ADDR = process.env.DATA_RELAYING_APP_SERVER_ADDR;
-
     @IsString()
     EQHUB_API_KEY = process.env.EQHUB_API_KEY;
-
-    // @IsString()
-    // EQHUB_AG_SERVER_ADDR = process.env.EQHUB_AG_SERVER_ADDR;
-
-    // @ValidateNested()
-    // @Type(() => MailConfig)
-    // adminMail: MailConfig = plainToClass(MailConfig, {
-    //     name: process.env.ADMIN_EMAIL_NAME,
-    //     transport: process.env.ADMIN_EMAIL_TRANSPORT,
-    // });
-    //
-    // @ValidateNested()
-    // @Type(() => MailConfig)
-    // hrMail: MailConfig = plainToClass(MailConfig, {
-    //     name: process.env.HR_EMAIL_NAME,
-    //     transport: process.env.HR_EMAIL_TRANSPORT,
-    // });
 
     @ValidateNested()
     @Type(() => RabbitMQConfig)

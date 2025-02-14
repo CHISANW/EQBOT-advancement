@@ -3,6 +3,8 @@ import axios, { AxiosInstance } from 'axios';
 import { AxiosProvider } from '../axios/axios-provider.service';
 import { ViewService } from '../view/view.service';
 import { APP } from '../../config/constants/constants';
+import { AccountGroup } from '../../domains/user/entites/account-group.entity';
+import { Account } from '../../domains/user/entites/account.entity';
 
 type RequestCallBody = {
     to: string;
@@ -45,18 +47,30 @@ export class EqHubService {
         return response.data.transaction_hash;
     }
 
-    public async sendEQBRToken(toAddress: string, retryCount: number = 3): Promise<any> {
+    public async initToken(account: Account) {
+        const axiosResponse = await axios.post(
+            this.axiosProvider.getTransferUrl(),
+            this.axiosProvider.createTransferBody(account.address, String(10000)),
+            {
+                headers: AxiosProvider.getHeaders(),
+            },
+        );
+        return axiosResponse.data.transaction_hash;
+    }
+
+    public async sendEQBRToken(
+        toAddress: string,
+        tokenPrice: number,
+        retryCount: number = 3,
+    ): Promise<any> {
         try {
             const axiosResponse = await axios.post(
                 this.axiosProvider.getTransferUrl(),
-                this.axiosProvider.createTransferBody(toAddress, '100'),
+                this.axiosProvider.createTransferBody(toAddress, tokenPrice.toString()),
                 {
                     headers: AxiosProvider.getHeaders(),
                 },
             );
-            if (axiosResponse.data.transaction_hash === undefined) {
-                throw new Error('값이 없음');
-            }
             return axiosResponse.data.transaction_hash;
         } catch (error) {
             if (retryCount > 0) {
@@ -66,6 +80,8 @@ export class EqHubService {
             throw error;
         }
     }
+
+    public async returnToken(accountGroup: AccountGroup) {}
 
     private async handlerReceipt(txHash: string) {
         const headers = AxiosProvider.getHeaders();

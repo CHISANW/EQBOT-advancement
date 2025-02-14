@@ -4,11 +4,13 @@ import { BlockService } from '../block-service';
 import { BlockDto } from './dtos/block-dto';
 import { TransactionHandlerFactory } from '../handler/transaction-handler-factory';
 import { BotStopDto, BotTransactionDto } from '../../../providers/rabbitmq/dtos/rabbitmq.dto';
+import { Web3Service } from '../../../providers/web3/v2/web3Service';
 
 @Controller('block')
 export class BlockControllerV2 {
     constructor(
         @Inject('BlockService') private readonly blockService: BlockService,
+        @Inject('Web3Service') private readonly webService: Web3Service,
         private readonly transactionHandlerFactory: TransactionHandlerFactory,
     ) {}
 
@@ -23,7 +25,7 @@ export class BlockControllerV2 {
 
     @Delete('/account')
     async testDelete() {
-        await this.blockService.stopSendMQ();
+        this.blockService.stopSendMQ();
         return 'ok';
     }
 
@@ -36,5 +38,10 @@ export class BlockControllerV2 {
     @RabbitmqSubscribe('BOT-STOP', 1)
     async handleBotStop(data: any) {
         await this.blockService.transactionSoftDelete(BotStopDto.fromRawData(data));
+    }
+
+    @Post('tt')
+    async testtt() {
+        // this.webService.transferTokenToAdmin();
     }
 }

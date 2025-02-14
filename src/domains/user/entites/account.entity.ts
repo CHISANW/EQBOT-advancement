@@ -28,7 +28,7 @@ export class Account {
     @Column({ default: 0 })
     token_amount: number;
 
-    @Column({ default: 0 })
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
     coin_amount: number;
 
     @Column({ type: 'float', nullable: true, default: () => '0' })
